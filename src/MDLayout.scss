@@ -1,0 +1,40 @@
+
+.MDLayout {
+  text-align: left;
+
+  position: fixed;
+  top: 150px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /*background-color: yellow;*/
+
+  /*background-image: url(simple-blue-opera-background-light-49001.jpg);*/
+
+
+  .MDLayout-MD-Wrapper {
+    height: 100%;
+    padding: 10px;
+
+    .MDLayout-M {
+      overflow-y: auto;
+      /*background-color: silver;*/
+
+      .btn-group:last-child {
+        position: absolute;
+        bottom: 0;
+      }
+
+    }
+
+    .MDLayout-D {
+      overflow-y: auto;
+      /*background-color: cyan;*/
+    }
+  }
+
+
+
+
+
+}

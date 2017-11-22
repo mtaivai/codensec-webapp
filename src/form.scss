@@ -1,0 +1,14 @@
+.input-group {
+  .input-group-btn, .input-group-addon {
+    .btn-link {
+      &:hover {
+        border: 1px solid #5bc0de;
+        background-color: #e2f2f2;
+      }
+    }
+  }
+}
+
+.form-control {
+  min-height: 2em;
+}
