@@ -1,0 +1,31 @@
+
+.EntryForm {
+
+  .EntryForm-Header {
+
+    padding-bottom: 1rem;
+    border-bottom: 1px solid silver;
+
+    .item-field-title {
+
+    }
+
+    .item-field-type {
+      font-size: smaller;
+
+    }
+
+    .tag-list {
+      span.badge {
+        margin-right: 5px;
+        &:last-child {
+          margin-right: inherit;
+        }
+      }
+    }
+  }
+
+  .EntryForm-Body {
+    margin-top: 1rem;
+  }
+}

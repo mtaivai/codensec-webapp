@@ -1,14 +1,15 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import {FormInput} from './form';
 import strings from './strings';
+import {DEFAULT_TYPE_NAME} from "./repository/EntryRepository";
+
+import './EntryForm.css';
 
 class EntryForm extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {
-            editTarget: props.editTarget
-        };
     }
 
     render() {
@@ -19,15 +20,15 @@ class EntryForm extends React.Component {
         const readOnly = this.props.readOnly;
         const children = this.props.children;
 
-        const renderField = (field) => {
+        const renderField = (field, horizontalForm) => {
 
-            const editTarget = this.state.editTarget;
+            const editTarget = this.props.editTarget;
             let value;
             // editTarget may or may not be present, in readOnly mode it's not required
             // - if present, we use its value; unless 'undefined'
             //   (it will be initialized in onChange handler)
             if (typeof(editTarget) !== 'undefined' && editTarget !== null) {
-                value = this.state.editTarget[field.name];
+                value = editTarget[field.name];
             }
             if (typeof(value) === 'undefined') {
                 value = item[field.name];
@@ -63,10 +64,12 @@ class EntryForm extends React.Component {
                                allowToggleMaskValue={maskValue}
                                allowPasswordInput={false}
                                readOnly={readOnly}
+                               horizontalForm={horizontalForm}
                                onChange={(e) => {
                                    console.log("FormInput: " + e.target.value);
-                                   this.state.editTarget[field.name] = e.target.value;
+                                   this.props.editTarget[field.name] = e.target.value;
                                    this.setState({
+                                       // TODO not going tow owork
                                        editTarget: this.state.editTarget
                                    });
                                }}
@@ -78,33 +81,102 @@ class EntryForm extends React.Component {
             }
         };
 
-        let fieldFilter;
-        if (typeof(this.props.fieldFilter) === "function") {
-            fieldFilter = this.props.fieldFilter;
-        } else {
-            fieldFilter = () => true;
-        }
-        const renderFields = () => {
 
-            const fieldComponents = [];
-            for (let fieldName in type.fields) {
-                if (!type.fields.hasOwnProperty(fieldName)) {
-                    continue;
+        const fieldFilter = (field) => {
+            // In read-only mode, don't show title or tags as regular fields
+            if (this.props.readOnly && field.name === "title" || field.name === "tags") {
+                return false;
+            }
+            if (typeof(this.props.fieldFilter) === "function") {
+                return this.props.fieldFilter(field);
+            } else {
+                return false;
+            }
+        };
+
+
+
+        const headerFields = [];
+        const bodyFields = [];
+
+        const isHeaderField = (field) => {
+            return (field.name === "title");
+        };
+        const isBodyField = (field) => {
+            return !isHeaderField(field);
+        };
+
+        for (let fieldName in type.fields) {
+            if (!type.fields.hasOwnProperty(fieldName)) {
+                continue;
+            }
+            const field = {name: fieldName, ...type.fields[fieldName]};
+
+            if (fieldFilter(field)) {
+                if (isHeaderField(field)) {
+                    headerFields.push(field);
                 }
-                const field = {name: fieldName, ...type.fields[fieldName]};
-
-                if (fieldFilter(field)) {
-                    fieldComponents.push(renderField({name: fieldName, ...field}));
+                if (isBodyField(field)) {
+                    bodyFields.push(field);
                 }
             }
 
+        }
+
+        const renderFields = (fields, horizontal) => {
+            const fieldComponents = [];
+            fields.forEach((field) => {
+                if (fieldFilter(field)) {
+                    fieldComponents.push(renderField(field, horizontal));
+                }
+            });
             return fieldComponents;
         };
+
+        const renderTags = () => {
+            if (item.tags) {
+                const elems = [];
+                let tagIndex = 0;
+                item.tags.forEach((tag) => {
+                    elems.push(<span key={"tag-" + (tagIndex++)} className={"badge badge-primary"}>{tag}</span>);
+                });
+                if (elems.length > 0) {
+                    return (
+                        <div className={"tag-list"}>
+                            {elems}
+                        </div>
+                    );
+                } else {
+                    return (null);
+                }
+
+
+            } else {
+                return (null);
+            }
+        };
+
+        const typeLabel = type.name === DEFAULT_TYPE_NAME ? "" : (type.title || type.name);
+        const title = item.title || "";
+
 
         return (
             <form className="EntryForm form">
 
-                {renderFields()}
+                <div className="EntryForm-Header">
+                    {title && <h2 className={"item-field-title"}>{title}</h2>}
+                    {typeLabel && <div className={"item-field-type"}>{typeLabel}</div>}
+
+                    {renderTags()}
+
+                    {renderFields(headerFields, false)}
+                </div>
+
+
+
+                <div className="EntryForm-Body">
+                    {renderFields(bodyFields, false)}
+                </div>
 
                 {/*
                 <FormInput id="name" type={"text"}
@@ -138,5 +210,20 @@ class EntryForm extends React.Component {
         );
     }
 }
+
+EntryForm.defaultProps = {
+    readOnly: false
+};
+
+EntryForm.propTypes = {
+    // fetching: PropTypes.bool,
+    item: PropTypes.object.isRequired,
+    type: PropTypes.object.isRequired,
+    readOnly: PropTypes.bool,
+    children: PropTypes.object,
+    editTarget: PropTypes.object,
+    fieldFilter: PropTypes.func
+};
+
 
 export default EntryForm;

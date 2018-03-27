@@ -3,7 +3,7 @@
   text-align: left;
 
   position: fixed;
-  top: 150px;
+  top: 50px;
   left: 0;
   right: 0;
   bottom: 0;
@@ -11,8 +11,11 @@
 
   /*background-image: url(simple-blue-opera-background-light-49001.jpg);*/
 
+  .X {
 
-  .MDLayout-MD-Wrapper {
+  }
+
+  .MDLayout-Main {
     height: 100%;
     padding: 10px;
 
@@ -28,8 +31,21 @@
     }
 
     .MDLayout-D {
-      overflow-y: auto;
+
       /*background-color: cyan;*/
+
+      .MDLayout-D-Header {
+        height: auto;
+        width: 100%;
+
+      }
+
+      .MDLayout-D-Content {
+        overflow-y: auto;
+        width: 100%;
+        height: 100%;
+
+      }
     }
   }
 

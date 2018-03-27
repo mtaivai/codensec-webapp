@@ -59,6 +59,12 @@ export class EntryRepository {
         });
     }
 
+    getItem(id) {
+        return new Promise((resolve, reject) => {
+            reject("EntryRepository.getItem() is not implemented for this repository");
+        });
+    }
+
 
     getTypes() {
         return new Promise((resolve, reject) => {
@@ -66,11 +72,12 @@ export class EntryRepository {
         });
     }
 
-    getItem(id) {
+    getType(name) {
         return new Promise((resolve, reject) => {
-            reject("EntryRepository.getItem() is not implemented for this repository");
+            reject("EntryRepository.getType() is not implemented for this repository");
         });
     }
+
 
     updateItem(itemId, newState) {
         return new Promise((resolve, reject) => {

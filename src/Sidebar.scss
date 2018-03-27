@@ -1,0 +1,71 @@
+
+@import 'variables';
+
+
+.sidebar {
+
+  //border: 1px solid red;
+  //position: absolute;
+  //width: 290px;
+  //top: 80px;
+  //bottom: 80px;
+  //left: 0;
+
+  //width: $default-sidebar-width;
+  //display: inline-block;
+
+  flex-grow: unset;
+  min-width: $default-sidebar-width;
+  width: $default-sidebar-width;
+
+  padding: 10px;
+  background-color: $layout-nav-background-color;
+}
+
+
+html {
+  body {
+    &.fixed-sidebar {
+      .App {
+        .sidebar {
+          border-right: 1px solid silver;
+          overflow: auto;
+          position: fixed;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          width: $default-sidebar-width;
+          display: none;
+        }
+
+
+
+        // Small devices (landscape phones, 576px and up)
+        @media (min-width: 576px) {
+          .sidebar {
+            display: block;
+          }
+          .main {
+            padding-left: $default-sidebar-width + 15px;
+          }
+        }
+
+      }
+
+    }
+    &.fixed-sidebar.fixed-header {
+      .App {
+        .sidebar {
+          top: $fixed-header-height;
+        }
+      }
+    }
+    &.fixed-sidebar.fixed-footer {
+      .App {
+        .sidebar {
+          bottom: $fixed-footer-height;
+        }
+      }
+    }
+  }
+}

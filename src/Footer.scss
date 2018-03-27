@@ -1,0 +1,41 @@
+
+@import 'variables';
+
+
+.App {
+  .footer {
+    background-color: $layout-nav-background-color;
+    border-top: 1px solid rgba(192, 192, 192, 0.5);
+    width: 100%;
+
+    // TODO .sticky-footer:
+    position: absolute;
+    bottom: 0;
+  }
+
+}
+
+html {
+  body {
+    &.fixed-footer {
+      //overflow: hidden;
+
+      margin-bottom: $fixed-footer-height;
+
+      .App {
+
+        .footer {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          z-index: 1030;
+          height: $fixed-footer-height;
+          line-height: $fixed-footer-height; /* Vertically center the text there */
+        }
+
+
+      }
+    }
+  }
+}

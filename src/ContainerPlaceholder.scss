@@ -1,14 +1,10 @@
 
 .ContainerPlaceholder {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: table;
-  height: 100%;
-  width: 100%;
+  display: block;
+  min-height: 100%;
+  min-width: 100%;
 
   .ContainerPlaceholder-Inner {
-    display: table-cell;
     vertical-align: middle;
     text-align: center;
 

@@ -66,7 +66,7 @@ class MockEntryRepository extends AbstractLocalRepository {
 
     constructor() {
         super();
-        this.mockDelay = 10;
+        this.mockDelay = 1000;
 
         this.types = JSON.parse(JSON.stringify(buildMockTypes()));
 
@@ -156,6 +156,7 @@ class MockEntryRepository extends AbstractLocalRepository {
         }
         const id = item.id;
 
+        // TODO validation!
         if (id) {
             // Update existing
             let savedItem;
@@ -164,6 +165,7 @@ class MockEntryRepository extends AbstractLocalRepository {
                 const it = this.items[i];
                 if (it.id === id) {
                     savedItem = JSON.parse(JSON.stringify(item));
+                    savedItem.version = (savedItem.version || 1) + 1;
                     this.items[i] = savedItem;
                     break;
                 }
@@ -176,6 +178,7 @@ class MockEntryRepository extends AbstractLocalRepository {
             // Save new
             const newItem = JSON.parse(JSON.stringify(item));
             newItem.id = this.nextItemId++;
+            newItem.version = 1;
             this.items.push(newItem);
             return JSON.parse(JSON.stringify(newItem));
         }

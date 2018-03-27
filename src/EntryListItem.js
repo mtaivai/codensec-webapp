@@ -1,16 +1,17 @@
 import React from 'react';
-
+import PropTypes from 'prop-types';
+import {Item} from "./Item";
 
 class EntryListItem extends React.Component {
     constructor(props) {
         super(props);
-        this.controller = props.controller;
         this.state = {
             // item: props.item,
             // onToggleSelection: props.onToggleSelection
 
         };
         // this.itemsUpdated = this.itemsUpdated.bind(this);
+
     }
 
     // itemsUpdated(e) {
@@ -36,6 +37,31 @@ class EntryListItem extends React.Component {
 
     }
 
+    shouldComponentUpdate(nextProps, nextState, nextContext) {
+
+        if (nextProps.selected !== this.props.selected) {
+            return true;
+        }
+        const nextItem = nextProps.item;
+        if (nextItem !== this.props.item) {
+            return true;
+        }
+        if (nextItem) {
+            if (nextItem.version !== this.currentItemVersion) {
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
+    componentWillReceiveProps(nextProps, nextContext) {
+        const item = nextProps.item;
+        this.currentItemVersion = item && item.version || undefined;
+    }
+
+
     render() {
         console.log("EntryListItem.render()");
 
@@ -43,7 +69,7 @@ class EntryListItem extends React.Component {
 
         const item = this.props.item;
 
-        if (this.controller.isItemSelected(item)) {
+        if (this.props.selected) {
             className += " active";
         }
 
@@ -101,13 +127,7 @@ class EntryListItem extends React.Component {
         // !plaintext
         // !collapsews
 
-        const contentType = (field) => {
-            if (!item._meta || !item._meta.fields || !item._meta.fields[field] || !item._meta.fields[field].type) {
-                return undefined;
-            }
-            return item._meta.fields[field].type.contentType;
-        };
-
+        const contentType = (field) => Item.getFieldContentType(item, field);
 
         const title = excerpt(stripMarkup(item.title, contentType('title')), 30);
         const detail = excerpt(stripMarkup(item.detail, contentType('detail')), 40);
@@ -125,5 +145,15 @@ class EntryListItem extends React.Component {
         );
     }
 }
+
+EntryListItem.defaultProps = {
+    selected: false
+};
+
+EntryListItem.propTypes = {
+    selected: PropTypes.bool,
+    onToggleSelection: PropTypes.func,
+    item: PropTypes.object
+};
 
 export default EntryListItem;

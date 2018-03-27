@@ -1,5 +1,5 @@
 import React from 'react';
-
+import PropTypes from 'prop-types';
 import Modal from './Modal';
 import EntryForm from './EntryForm';
 import ContainerLoading from './ContainerLoading';
@@ -8,17 +8,17 @@ import ContainerPlaceholder from './ContainerPlaceholder';
 import './EntryDetail.css';
 
 import strings from './strings';
+import {Item} from "./Item";
 
 
 class EntryDetail extends React.Component {
 
     constructor(props) {
         super(props);
-        this.controller = props.controller;
 
         this.state = {
-            // item: this.mergeItems(this.controller.getSelectedItems()),
-            editMode: !!props.editMode,
+            fetchingType: false,
+            fetchingTypeFailed: false
         };
 
         // TODO do we need these?
@@ -83,60 +83,134 @@ class EntryDetail extends React.Component {
     componentDidMount() {
         // this.controller.addSelectionChangedListener(this.selectionChanged);
         // this.controller.addItemUpdatedListener(this.itemUpdated);
+        // console.log("EntryDetail.componentDidMount");
+        this._doFetchType();
+        this.mounted = true;
     }
 
     componentWillUnmount() {
         // this.controller.removeSelectionChangedListener(this.selectionChanged);
         // this.controller.removeItemUpdatedListener(this.itemUpdated);
+        this.mounted = false;
     }
 
-    render() {
-        // console.log("EntryDetail.render()");
-        const item = this.props.item;
-        // console.log("  item: " + JSON.stringify(item));
 
-        if (!this.state.type || this.state.type.name !== item.type) {
+    componentWillReceiveProps(nextProps, nextContext) {
+        // console.log("EntryDetail.componentWillReceiveProps", nextProps, nextContext);
 
-            if (!this.isFetchingType && !this.state.error) {
-                this.isFetchingType = true;
+        // TODO the EntryDetailContainer should take care of fetching types!
+        // TODO ...actually, it should be one who fetches items in the first place
+        if (Item.getId(this.props.item) !== Item.getId(nextProps.item) ||
+            Item.getType(this.props.item) !== Item.getType(nextProps.item)) {
+            this.setState({
+                type: undefined
+            });
+            this._doFetchType(nextProps.item, nextProps.typeProvider);
+        }
+    }
 
-                this.controller.getType(item.type).then((type) => {
-                    this.isFetchingType = false;
-                    const error = (typeof(type) === 'undefined');
-                    if (error) {
-                        console.error("Failed to get type '" + item.type + "'");
-                    }
-                    this.setState({
-                        error: error,
-                        type: type
-                    });
-                }).catch((err) => {
-                    console.error("Failed to fetch type '" + item.type + "'", err);
-                    this.isFetchingType = false;
-                    this.setState({
-                        error: true
-                    });
-                })
-            }
 
-            if (this.isFetchingType) {
-                return (
-                    <ContainerLoading/>
-                );
-            } else {
-                return (
-                    <ContainerPlaceholder>
-                        Failed to read entry type
-                    </ContainerPlaceholder>
-                );
-            }
+    _doFetchType(item, typeProvider) {
+        // Fetch the type
+        this.setState({
+            fetchingType: true
+        });
+
+        if (!item) {
+            item = this.props.item;
+        }
+        if (!typeProvider) {
+            typeProvider = this.props.typeProvider;
         }
 
-        const onEditButton = (e) => {
-            e.preventDefault();
+        // console.log("***** EntryDetail._doFetchType", item);
 
-            this.setState({editMode: true});
-        };
+        const typeName = Item.getType(item);
+
+        const type = typeProvider(typeName);
+        // console.log("Type: " + type + "; typeof(type) = " + typeof(type), type);
+
+        if (type === null || typeof(type) === "undefined") {
+            console.error("Failed to get type '" + typeName + "'");
+            this.setState({
+                fetchingType: false,
+                fetchingTypeFailed: true,
+                type: undefined
+            });
+        } else if (typeof(type) === "object") {
+            // Either a type object or Promise
+            if (typeof(type.then) === "function") {
+                // A Promise
+                type
+                    .then((result) => {
+                        this._onGetTypeResolved(result);
+                    })
+                    .catch((err) => {
+                        console.error("typeProvider promise failed", err);
+                    });
+            } else {
+                // A type object
+                this._onGetTypeResolved(type);
+            }
+        } else if (typeof(type) === "function") {
+            // Simple accessor function
+            const typeObj = type(typeName);
+            this._onGetTypeResolved(typeObj);
+        } else {
+            console.error("typeProvider returned invalid type for '" + typeName + "'", type);
+            this.setState({
+                fetchingType: false,
+                fetchingTypeFailed: true,
+                type: undefined
+            });
+        }
+    }
+
+    _onGetTypeResolved(result) {
+        if (!this.mounted) {
+            return;
+        }
+        // console.log("EntryDetail._onGetTypeResolved", result);
+        if (typeof(result) === "object") {
+            this.setState({
+                fetchingType: false,
+                fetchingTypeFailed: false,
+                type: result
+            });
+        } else {
+            this.setState({
+                fetchingType: false,
+                fetchingTypeFailed: true,
+                type: undefined
+            });
+        }
+    }
+
+
+
+    render() {
+        console.log("EntryDetail.render()", this.props, this.state);
+
+        if (!this.mounted) {
+            return (null);
+        }
+
+        const item = this.props.item;
+        if (!item) {
+            return (null);
+        }
+
+        if (this.state.fetchingType) {
+            return (
+                <ContainerLoading/>
+            );
+        } else if (this.state.fetchingTypeFailed) {
+            return (
+                <ContainerPlaceholder>
+                    Failed to read entry type
+                </ContainerPlaceholder>
+            );
+        }
 
 
         // const updateItem = (itemId, newState) => {
@@ -153,31 +227,28 @@ class EntryDetail extends React.Component {
 
 
         const editTarget = {
-            id: item.id
+            id: Item.getId(item)
         };
 
-        const viewModeFieldFilter = (field) => {
-            if (field.name === "title") {
-                return false;
-            }
-            return true;
-        };
+
 
         const onDismiss = typeof(this.props.onDismiss) === "function" ? this.props.onDismiss : () => {};
 
 
         const handleEditSave = (e, success, failed) => {
             // console.log("editTarget: " + JSON.stringify(editTarget));
-            this.controller.updateItem(item.id, editTarget).then(() => {
-                this.setState({editMode: false});
-                typeof(success) === "function" && success();
-                onDismiss(true);
 
-            }).catch((error) => {
-                console.error("Failed to update entry", error);
-                alert(strings.get('Failed_To_Save_Entry'));
-                typeof(failed) === "function" && failed();
-            });
+            // this.controller.updateItem(item.id, editTarget).then(() => {
+            //     this.setState({editMode: false});
+            //     typeof(success) === "function" && success();
+            //     onDismiss(true);
+            //
+            // }).catch((error) => {
+            //     console.error("Failed to update entry", error);
+            //     alert(strings.get('Failed_To_Save_Entry'));
+            //     typeof(failed) === "function" && failed();
+            // });
+
         };
         const handleEditCancel = (e) => {
             this.setState({
@@ -186,19 +257,48 @@ class EntryDetail extends React.Component {
             onDismiss(false);
         };
 
+        const editInModal = false;
+
+        const type = this.state.type;
+        const editMode = this.props.editMode;
+
+        // const showEditButton = typeof(this.props.onBeginEdit) === "function";
+
+        // const onBeginEdit = (e) => {
+        //     e.preventDefault();
+        //     if (typeof(this.props.onBeginEdit) === "function") {
+        //         this.props.onBeginEdit(item);
+        //     }
+        // };
+
+        const viewModeFieldFilter = (field) => {
+            if (field.name !== "XXXtitle") {
+                return true;
+            }
+        };
 
         return (
             <div className={"EntryDetail"}>
-                <h3>{item.title}</h3>
-                <p>{this.state.type.title || this.state.type.name}</p>
-                <EntryForm item={item} type={this.state.type} readOnly={true}
+                <EntryForm item={item} type={type}
+                           readOnly={!(editMode || editInModal)}
+                           editTarget={editTarget}
                            fieldFilter={viewModeFieldFilter}>
-                    <div className={"btn-group"}>
-                        <button className={"btn btn-primary"} onClick={onEditButton}>{strings.get('Edit')}</button>
+
+                    {/*
+                    <div className={"btn-group"} style={{display: "block"}}>
+                        {
+                            (!editMode && showEditButton) &&
+                            <button className={"btn btn-secondary"} onClick={onBeginEdit}>{strings.get('Edit')}</button>
+                        }
+                        {
+                            (editMode && !editInModal) &&
+                            <button className={"btn btn-primary"} onClick={onBeginEdit}>{strings.get('Tallentele')}</button>
+                        }
                     </div>
+                    */}
                 </EntryForm>
 
-                {this.state.editMode && ((
+                {editInModal && editMode && ((
                     <Modal title={strings.formatString(strings.EditEntry_Format, item.title ||'')}
                            okButtonLabel={strings.Save}
                            onDismiss={handleEditCancel}
@@ -206,12 +306,24 @@ class EntryDetail extends React.Component {
                                modal.disable();
                                handleEditSave(e, null, modal.enable);
                            }} >
-                        <EntryForm item={item} type={this.state.type} readOnly={false} editTarget={editTarget}/>
+                        <EntryForm item={item} type={type} readOnly={false} editTarget={editTarget}/>
                     </Modal>
                 ))}
             </div>
         );
     }
 }
+
+EntryDetail.defaultProps = {
+    editMode: false
+};
+
+EntryDetail.propTypes = {
+    // fetching: PropTypes.bool,
+    editMode: PropTypes.bool,
+    item: PropTypes.object.isRequired,
+    typeProvider: PropTypes.func.isRequired//,
+    // onBeginEdit: PropTypes.func
+};
 
 export default EntryDetail;

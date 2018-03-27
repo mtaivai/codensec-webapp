@@ -1,0 +1,38 @@
+
+.EntriesPage {
+
+
+  &.fixed-sidebar {
+
+    &>div {
+
+      .XXXsidebar {
+
+
+
+        border: 1px solid red;
+        position: fixed;
+        top: 56px;
+        left: 0;
+        width: 200px;
+
+        height: auto;
+        bottom: 60px;
+        //padding-top: 60px;
+        //padding-bottom: 60px;
+
+        overflow-y: auto;
+        overflow-x: auto;
+
+        & > .sidebar-content {
+          border: 1px solid green;
+        }
+
+      }
+      .XXXprimary {
+        margin-left: 200px;
+      }
+    }
+  }
+
+}

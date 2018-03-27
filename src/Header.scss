@@ -1,0 +1,35 @@
+
+@import 'variables';
+
+
+.App {
+
+  header {
+    background-color: rgba(248, 249, 250, 0.95);
+    border-bottom: 1px solid rgba(192, 192, 192, 0.5);
+  }
+
+}
+html {
+  body {
+    &.fixed-header {
+
+
+
+      .App {
+        margin-top: $fixed-header-height;
+
+
+        header {
+
+          position: fixed;
+          top: 0;
+          right: 0;
+          left: 0;
+          height: $fixed-header-height;
+          z-index: 1030;
+        }
+      }
+    }
+  }
+}

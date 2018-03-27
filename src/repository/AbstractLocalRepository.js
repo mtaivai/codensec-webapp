@@ -44,13 +44,14 @@ class AbstractLocalRepository extends EntryRepository {
     }
 
 
+    /**
+     * Return an array of item objects.
+     */
     doGetItems() {
         throw new Error("AbstractLocalRepository.doGetItems() is not implemented");
     }
-    doGetTypes() {
-        throw new Error("AbstractLocalRepository.doGetTypes() is not implemented");
-    }
     doGetItem(id) {
+        // TODO this is very inefficient
         const items = this.doGetItems();
         for (let i = 0; i < items.length; i++) {
             const it = items[i];
@@ -60,8 +61,27 @@ class AbstractLocalRepository extends EntryRepository {
                 return JSON.parse(JSON.stringify(it));
             }
         }
-        return undefined;
     }
+
+    /**
+     * Return an array of type objects.
+     */
+    doGetTypes() {
+        throw new Error("AbstractLocalRepository.doGetTypes() is not implemented");
+    }
+    doGetType(name) {
+        // TODO this is very inefficient
+        const types = this.doGetTypes();
+        for (let i = 0; i < types.length; i++) {
+            const it = types[i];
+            if (it.name === name) {
+                // Make sure that we return new objects every time (to mimic actual
+                // server response)
+                return JSON.parse(JSON.stringify(it));
+            }
+        }
+    }
+
     doSaveItem(id) {
         throw new Error("AbstractLocalRepository.doSaveItem() is not implemented");
     }
@@ -180,17 +200,25 @@ class AbstractLocalRepository extends EntryRepository {
         });
     }
 
+    getItem(id) {
+        return this.promise(() => {
+            return this.doGetItem(id);
+        });
+    }
+
     getTypes() {
         return this.promise(() => {
             return this.doGetTypes();
         });
     }
 
-    getItem(id) {
+    getType(id) {
         return this.promise(() => {
-            return this.doGetItem(id, true);
+            return this.doGetType(id);
         });
     }
+
+
 
 
     _doUpdateItem(itemId, newState) {

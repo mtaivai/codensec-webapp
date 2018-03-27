@@ -1,4 +1,5 @@
 import React  from 'react';
+import PropTypes from 'prop-types';
 
 import TextareaAutosize from 'react-textarea-autosize';
 import ContentEditable from 'react-contenteditable';
@@ -30,9 +31,29 @@ class FormGroup extends React.Component {
     render() {
         const id = this.props.id || "";
 
+
+        let className = this.props.className;
+        if (this.props.additionalClassName) {
+            className += " " + this.props.additionalClassName;
+        }
+
+        let labelClassName = this.props.labelClassName;
+        if (this.props.additionalLabelClassName) {
+            labelClassName += " " + this.props.additionalLabelClassName;
+        }
+
+        let helpClassName = this.props.helpClassName;
+        if (this.props.additionalHelpClassName) {
+            helpClassName += " " + this.props.additionalHelpClassName;
+        }
+
         const renderLabel = () => {
             if (this.props.label) {
-                return (<label htmlFor={id}>{this.props.label}</label>);
+                return (
+                    <label htmlFor={id} className={labelClassName}>
+                        {this.props.label}
+                    </label>
+                );
             } else {
                 return null;
             }
@@ -41,13 +62,17 @@ class FormGroup extends React.Component {
         const renderHelp = () => {
             if (this.props.help) {
                 const helpId = (this.props.helpId || id + "Help");
-                return (<small id={helpId} className="form-text text-muted">{this.props.help}</small>);
+                return (
+                    <small id={helpId}  className={helpClassName}>
+                        {this.props.help}
+                    </small>);
             } else {
                 return null;
             }
         };
+
         return (
-            <div className="form-group">
+            <div className={className}>
                 {renderLabel()}
                 {this.props.children}
                 {renderHelp()}
@@ -55,6 +80,28 @@ class FormGroup extends React.Component {
         );
     }
 }
+
+
+FormGroup.defaultProps = {
+    className: "form-group",
+    labelClassName: "",
+    helpClassName: "form-text text-muted"
+};
+
+FormGroup.propTypes = {
+
+    id: PropTypes.string,
+    label: PropTypes.string,
+    help: PropTypes.string,
+
+    className: PropTypes.string,
+    additionalClassName: PropTypes.string,
+    labelClassName: PropTypes.string,
+    additionalLabelClassName: PropTypes.string,
+    helpClassName: PropTypes.string,
+    additionalHelpClassName: PropTypes.string,
+
+};
 
 // Also for 'textarea' and special 'password-textarea'
 class FormInput extends React.Component {
@@ -141,6 +188,7 @@ class FormInput extends React.Component {
         // TODO what if we have the same form in a modal? ID's would be duplicated: we need to prefix id values.
         // console.log("FormInput.render: " + this.props.id + " = " + this.props.value + " - " + this.state.value);
 
+
         const id = this.props.id || "";
         const helpId = (this.props.help ? (id + "Help") : "");
         //const value = (typeof this.state.value !== 'undefined') ? this.state.value : this.props.value;
@@ -149,10 +197,12 @@ class FormInput extends React.Component {
 
         let inputType = this.props.type || "text";
 
-        const password = this.isPassword();
+        // const password = this.isPassword();
         const passwordInput = inputType === "password" && this.props.allowPasswordInput;
         const html = inputType === "html";
         let placeholder = this.props.placeholder;
+
+        const horizontal = this.props.horizontalForm;
 
         // const renderTextareaAsDiv = false && this.props.readOnly;
         // const renderInputAsDiv = false && this.props.readOnly;
@@ -294,8 +344,27 @@ class FormInput extends React.Component {
             }
 
         };
+
+        const renderWrappedInput = (wrap, wrapperClassName) => {
+            if (wrap) {
+                return (
+                    <div className={wrapperClassName}>
+                        {renderInput()}
+                    </div>
+                );
+            } else {
+                return renderInput();
+            }
+        };
+
+
         return (
-            <FormGroup id={id} helpId={helpId} {...this.props}>
+            <FormGroup id={id} helpId={helpId}
+                       additionalClassName={horizontal ? "row" : ""}
+                       additionalHelpClassName={horizontal ? "col-lg-12" : ""}
+                       additionalLabelClassName={horizontal ? "col-form-label col-md-2" : ""}
+                       {...this.props}
+            >
                 {/*
                 <input
                     ref={(input) => {this.inputElement = input}}
@@ -309,9 +378,9 @@ class FormInput extends React.Component {
                     disabled={this.props.disabled || typeof this.props.onChange !== 'function'}
                     onChange={this.handleChange}
                 />*/}
-                {renderInput()}
+                {renderWrappedInput(horizontal, "col-md-10")}
 
-                <div className="invalid-feedback">
+                <div className={"invalid-feedback" + (horizontal ? " col-lg-12" : "")}>
                     Please provide a valid city.
                 </div>
             </FormGroup>
@@ -319,6 +388,33 @@ class FormInput extends React.Component {
     }
 }
 
+
+FormInput.defaultProps = {
+    type: "text",
+    disabled: false,
+    readonly: false,
+    allowPasswordInput: true,
+    allowToggleMaskValue: true,
+    horizontalForm: false
+};
+
+FormInput.propTypes = {
+    id: PropTypes.string,
+    helpId: PropTypes.string,
+    value: PropTypes.any,
+    type: PropTypes.string,
+    placeholder: PropTypes.string,
+    disabled: PropTypes.bool,
+    readonly: PropTypes.bool,
+
+    onChange: PropTypes.func,
+
+    allowPasswordInput: PropTypes.bool,
+    allowToggleMaskValue: PropTypes.bool,
+
+    horizontalForm: PropTypes.bool
+
+};
 
 
 export {FormGroup, FormInput};
